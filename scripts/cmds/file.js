@@ -1,73 +1,36 @@
-const fs = require("fs-extra");
-const path = require("path");
+const fs = require('fs');
 
 module.exports = {
-        config: {
-                name: "file",
-                aliases: [],
-                version: "1.2",
-                author: "NeoKEX",
-                countDown: 5,
-                role: 4,
-                description: {
-                        vi: "Xem mã nguồn của một lệnh cụ thể",
-                        en: "View the source code of a specific command"
-                },
-                category: "system",
-                guide: {
-                        vi: "   {pn} <tên lệnh>: xem mã nguồn của lệnh",
-                        en: "   {pn} <command name>: view source code of the command"
-                }
-        },
+	config: {
+		name: "file",
+		aliases: ["files"],
+		version: "1.0",
+		author: "Mahir Tahsan",
+		countDown: 5,
+		role: 0,
+		shortDescription: "Send bot script",
+		longDescription: "Send bot specified file ",
+		category: "𝗢𝗪𝗡𝗘𝗥",
+		guide: "{pn} file name. Ex: .{pn} filename"
+	},
 
-        onStart: async function ({ args, message }) {
-                if (!args.length) {
-                        return message.SyntaxError();
-                }
+	onStart: async function ({ message, args, api, event }) {
+		const permission = ["100047994102529","61577095705293",];
+		if (!permission.includes(event.senderID)) {
+			return api.sendMessage(" 😹 𝗧𝘂𝗺𝗶 𝗰𝗼𝗺𝗺𝗮𝗻𝗱 𝗰𝗵𝗮𝗹𝗮𝘁𝗲 𝗰𝗵𝗮𝗼? 𝗔𝘄𝘄 𝗯𝗮𝗯𝘆, 𝘁𝗼𝗼 𝗰𝘂𝘁𝗲! 𝗕𝘂𝘁 𝗻𝗼𝗼𝗼... 🐤", event.threadID, event.messageID);
+		}
 
-                const commandName = args[0].toLowerCase();
-                const allCommands = global.GoatBot.commands;
+		const fileName = args[0];
+		if (!fileName) {
+			return api.sendMessage("📝 𝐏𝐥𝐞𝐚𝐬𝐞 𝐩𝐫𝐨𝐯𝐢𝐝𝐞 𝐚 𝐟𝐢𝐥𝐞𝐧𝐚𝐦𝐞 𝐨𝐫 𝐫𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 𝐟𝐢𝐥𝐞..🙂", event.threadID, event.messageID);
+		}
 
-                let command = allCommands.get(commandName);
-                if (!command) {
-                        const cmd = [...allCommands.values()].find((c) =>
-                                (c.config.aliases || []).includes(commandName)
-                        );
-                        command = cmd;
-                }
+		const filePath = __dirname + `/${fileName}.js`;
+		if (!fs.existsSync(filePath)) {
+			return api.sendMessage(`File not found: ${fileName}.js`, event.threadID, event.messageID);
+		}
 
-                if (!command) {
-                        return message.reply("❌ Command not found");
-                }
-
-                const actualCommandName = command.config.name;
-                
-                if (!/^[a-zA-Z0-9_-]+$/.test(actualCommandName)) {
-                        return message.reply("❌ Invalid command name");
-                }
-
-                const allowedDir = path.resolve(__dirname);
-                const filePath = path.resolve(__dirname, `${actualCommandName}.js`);
-                
-                if (!filePath.startsWith(allowedDir)) {
-                        return message.reply("❌ Access denied: Path traversal detected");
-                }
-
-                try {
-                        if (!fs.existsSync(filePath)) {
-                                return message.reply("❌ File not found");
-                        }
-
-                        const content = fs.readFileSync(filePath, "utf-8");
-                        
-                        if (content.length > 4000) {
-                                return message.reply(`${content.substring(0, 3997)}...`);
-                        }
-                        
-                        return message.reply(`${content}`);
-
-                } catch (err) {
-                        return message.reply(`❌ Error: ${err.message}`);
-                }
-        }
+		const fileContent = fs.readFileSync(filePath, 'utf8');
+		api.sendMessage({ body: fileContent }, event.threadID);
+	}
 };
